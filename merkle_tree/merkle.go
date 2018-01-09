@@ -1,14 +1,26 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 )
 
 func main() {
-	fmt.Print("Hello")
+	if len(os.Args) != 2 {
+		fmt.Println("Usage: merkle file_path")
+		return
+	}
+	path := os.Args[1]
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Errorf("Unable to open file %s. Message:  %v", path, err)
+	}
+	tree := BuildTree(f)
+	PrintTree(tree, 0)
 }
 
 type TreeNode struct {
@@ -18,7 +30,6 @@ type TreeNode struct {
 }
 
 func CreateTree(l []*TreeNode, start int, end int) *TreeNode {
-	fmt.Println(start, end)
 	if start == end {
 		return l[start]
 	}
@@ -43,7 +54,17 @@ func CreateTree(l []*TreeNode, start int, end int) *TreeNode {
 	return &TreeNode{hash, left, right}
 }
 
-func BuildTree(r *bytes.Reader) *TreeNode {
+func PrintTree(n *TreeNode, level int) {
+	fmt.Printf("%s%v \n", strings.Repeat("---- ", level), hex.EncodeToString(n.Hash[:])[0:5])
+	if n.Left != nil {
+		PrintTree(n.Left, level+1)
+	}
+	if n.Right != nil {
+		PrintTree(n.Right, level+1)
+	}
+}
+
+func BuildTree(r io.Reader) *TreeNode {
 	var nodes []*TreeNode
 	chunk := make([]byte, 16)
 
@@ -64,6 +85,6 @@ func BuildTree(r *bytes.Reader) *TreeNode {
 	return CreateTree(nodes, 0, len(nodes)-1)
 }
 
-func RootHash(r *bytes.Reader) [32]byte {
+func RootHash(r io.Reader) [32]byte {
 	return BuildTree(r).Hash
 }
