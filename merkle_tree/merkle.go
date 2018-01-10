@@ -29,7 +29,11 @@ type TreeNode struct {
 	Right *TreeNode
 }
 
-func CreateTree(l []*TreeNode, start int, end int) *TreeNode {
+func CreateTree(l []*TreeNode) {
+
+}
+
+func CreateTree_wrong(l []*TreeNode, start int, end int) *TreeNode {
 	if start == end {
 		return l[start]
 	}
